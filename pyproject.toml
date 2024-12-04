@@ -10,7 +10,12 @@ package-mode = false
 python = "^3.12"
 pandas = "^2.2.3"
 scipy = "^1.14.1"
+matplotlib = "^3.9.3"
 
+[[tool.poetry.source]]
+name = "zju"
+url = "https://mirrors.zju.edu.cn/pypi/web/simple"
+priority = "primary"
 
 [build-system]
 requires = ["poetry-core"]
