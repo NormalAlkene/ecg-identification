@@ -39,10 +39,10 @@ PREPROCESSING = _Preprocessing()
 @dataclass
 class _TransformerModel:
     num_transformer_layers: int = 4
-    dim_transformer_layer: int = 512
+    dim_transformer_layer: int = 256
     num_heads: int = 8
-    dim_input: int = 512
-    len_seq: int = 10
+    dim_input: int = 1024
+    len_seq: int = 20
     dropout: float = 0.1
     activation: str = 'relu'
     num_fc_layers: int = 1
@@ -76,8 +76,8 @@ class _Dataloader:
     shuffle: bool = False
     drop_last: bool = False
 
-DATALOADER_TRAINING = _Dataloader(batch_size=1024, num_workers=0, shuffle=True, drop_last=False)
-DATALOADER_VALIDATION = _Dataloader(batch_size=1024, num_workers=0, shuffle=True, drop_last=False)
+DATALOADER_TRAINING = _Dataloader(batch_size=512, num_workers=0, shuffle=True, drop_last=False)
+DATALOADER_VALIDATION = _Dataloader(batch_size=512, num_workers=0, shuffle=True, drop_last=False)
 DATALOADER_TESTING = _Dataloader(batch_size=1, num_workers=0)
 #DATALOADER_TRAINING = _Dataloader(batch_size=32, num_workers=os.cpu_count() - 1, shuffle=True)
 #DATALOADER_VALIDATION = _Dataloader(batch_size=1, num_workers=os.cpu_count() - 1)

@@ -124,7 +124,6 @@ class ResampleCallback(pl.Callback):
 
     @override
     def on_train_epoch_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
-        # TODO: check
         Process(
             target = self._worker,
             args = (trainer.train_dataloader.dataset, self._q_training)
@@ -132,9 +131,9 @@ class ResampleCallback(pl.Callback):
         Process(
             target = self._worker,
             args = (trainer.val_dataloaders.dataset, self._q_validation)
-        )
+        ).start()
 
     @override
     def on_train_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
-        pl_module.train_dataset.resample(self._q_training.get())
-        pl_module.val_dataset.resample(self._q_validation.get())
+        trainer.train_dataloader.dataset.resample(self._q_training.get())
+        trainer.val_dataloaders.dataset.resample(self._q_validation.get())
