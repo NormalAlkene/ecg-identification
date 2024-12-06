@@ -125,8 +125,8 @@ class TransformerEcgIdModel(pl.LightningModule):
         """
 
         encoded = [
-            self._encoder(self._pe(self._embedding(batch[0]))), 
-            self._encoder(self._pe(self._embedding(batch[1])))
+            torch.flatten(self._encoder(self._pe(self._embedding(batch[0]))), start_dim = 1),
+            torch.flatten(self._encoder(self._pe(self._embedding(batch[1]))), start_dim = 1)
         ] # type: ignore
 
         # Tensor[batch, flattened(seq, feat) * 2]
