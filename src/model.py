@@ -12,7 +12,7 @@ import lightning as pl
 class PositionalEncoding(nn.Module):
     """Positional encoding
     """
-    def __init__(self, dim: int, max_len: int = 5000, base: float = 10000.0, device: str = 'cpu', dtype: torch.dtype = torch.float32):
+    def __init__(self, dim: int, max_len: int = 5000, base: float = 10000.0, device: str = "cpu", dtype: torch.dtype = torch.float32):
         super().__init__()
 
         pe: Tensor = torch.zeros(max_len, dim, device = device, dtype = dtype)
@@ -24,7 +24,7 @@ class PositionalEncoding(nn.Module):
 
         pe = pe.unsqueeze(0)
 
-        self.register_buffer('pe', pe)
+        self.register_buffer("pe", pe)
 
     def forward(self, x: Tensor) -> Tensor:
         """Add positional encoding
@@ -70,10 +70,10 @@ class TransformerEcgIdModel(pl.LightningModule):
                  dim_input: int = 512,
                  len_seq: int = 10,
                  dropout: float = 0.1,
-                 activation: str | Callable[[Tensor], Tensor] = 'relu',
+                 activation: str | Callable[[Tensor], Tensor] = "relu",
                  num_fc_layers: int = 4,
                  lr: float = 1e-3,
-                 device: str = 'cpu',
+                 device: str = "cpu",
                  dtype: torch.dtype = torch.float32,
                  **kwargs
                  ):
@@ -149,7 +149,7 @@ class TransformerEcgIdModel(pl.LightningModule):
         outputs: Tensor = self(batch)
         loss: Tensor = self._criterion(outputs, batch[2])
 
-        self.log('train_loss', loss)
+        self.log("train_loss", loss, prog_bar = True)
         return loss
 
     @override
@@ -159,7 +159,7 @@ class TransformerEcgIdModel(pl.LightningModule):
         outputs: Tensor = self(batch)
         loss: Tensor = self._criterion(outputs, batch[2])
 
-        self.log('val_loss', loss)
+        self.log("val_loss", loss, prog_bar = True)
         return loss
 
     @override
@@ -169,7 +169,7 @@ class TransformerEcgIdModel(pl.LightningModule):
         outputs: Tensor = self(batch)
         loss: Tensor = self._criterion(outputs, batch[2])
 
-        self.log('test_loss', loss)
+        self.log("test_loss", loss, prog_bar = True)
         return loss
 
     @override

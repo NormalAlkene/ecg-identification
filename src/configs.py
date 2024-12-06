@@ -42,7 +42,7 @@ class _TransformerModel:
     dim_transformer_layer: int = 512
     num_heads: int = 8
     dim_input: int = 512
-    len_seq: int = 10
+    len_seq: int = 100
     dropout: float = 0.1
     activation: str = 'relu'
     num_fc_layers: int = 1
@@ -56,6 +56,8 @@ MODEL_TRANSFORMER = _TransformerModel()
 class _Trainer:
     max_epochs: int = 128
     accelerator: str = 'cuda'
+    log_every_n_steps: int = 10
+
 
 TRAINER = _Trainer()
 
@@ -73,10 +75,14 @@ class _Dataloader:
     batch_size: int = 1
     num_workers: int = 0
     shuffle: bool = False
+    drop_last: bool = False
 
-DATALOADER_TRAINING = _Dataloader(batch_size=32, num_workers=os.cpu_count() - 1, shuffle=True)
-DATALOADER_VALIDATION = _Dataloader(batch_size=1, num_workers=os.cpu_count() - 1)
-DATALOADER_TESTING = _Dataloader(batch_size=1, num_workers=os.cpu_count() - 1)
+DATALOADER_TRAINING = _Dataloader(batch_size=1024, num_workers=0, shuffle=True, drop_last=True)
+DATALOADER_VALIDATION = _Dataloader(batch_size=1024, num_workers=0, shuffle=True, drop_last=True)
+DATALOADER_TESTING = _Dataloader(batch_size=1, num_workers=0)
+#DATALOADER_TRAINING = _Dataloader(batch_size=32, num_workers=os.cpu_count() - 1, shuffle=True)
+#DATALOADER_VALIDATION = _Dataloader(batch_size=1, num_workers=os.cpu_count() - 1)
+#DATALOADER_TESTING = _Dataloader(batch_size=1, num_workers=os.cpu_count() - 1)
 
 @dataclass
 class _Checkpoint:
