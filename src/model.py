@@ -2,7 +2,7 @@
 Transformer model
 """
 
-from typing import Any, Callable, override
+from typing import Callable, override
 import math
 
 import torch
