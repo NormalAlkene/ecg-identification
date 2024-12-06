@@ -100,7 +100,7 @@ class TransformerEcgIdModel(pl.LightningModule):
         fc_list: list[nn.Module] = []
         for _ in range(num_fc_layers):
             fc_list.append(nn.Linear(dim_transformer_layer * len_seq * 2, dim_transformer_layer * len_seq * 2, dtype = dtype))
-            fc_list.append(nn.LeakyReLU())
+            fc_list.append(nn.LeakyReLU(inplace = True))
 
         fc_list.append(nn.Linear(dim_transformer_layer * len_seq * 2, 2, dtype = dtype))
         fc_list.append(nn.Sigmoid())
@@ -118,29 +118,21 @@ class TransformerEcgIdModel(pl.LightningModule):
                 batch[1] (Tensor[batch, seq, feat]): input 1 
                 batch[2] (Tensor[batch, feat = 2]): label
 
-            batch_idx (Any): _description_
+            batch_idx (Any):
 
         Returns:
-            Any: _description_
+            Tensor: the result
         """
 
-        inputs: list[Tensor] = [batch[0], batch[1]]
-        inputs = list(
-            map(
-                lambda x:
-                    self._encoder(
-                        self._pe(
-                            self._embedding(x)
-                        )
-                    ).flatten(start_dim = 1),
-                inputs
-            )
-        )
+        encoded = [
+            self._encoder(self._pe(self._embedding(batch[0]))), 
+            self._encoder(self._pe(self._embedding(batch[1])))
+        ] # type: ignore
 
-        # memory: Tensor[batch, flattened(seq, feat) * 2]
-        memory: Tensor = torch.cat(inputs, dim = 1)
+        # Tensor[batch, flattened(seq, feat) * 2]
+        encoded = torch.cat(encoded, dim = 1)
 
-        return self._fc(memory)
+        return self._fc(encoded)
 
     @override
     def training_step(self, batch: list[Tensor], batch_idx: int) -> Tensor:

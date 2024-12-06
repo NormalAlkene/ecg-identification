@@ -77,8 +77,8 @@ class _Dataloader:
     shuffle: bool = False
     drop_last: bool = False
 
-DATALOADER_TRAINING = _Dataloader(batch_size=1024, num_workers=0, shuffle=True, drop_last=True)
-DATALOADER_VALIDATION = _Dataloader(batch_size=1024, num_workers=0, shuffle=True, drop_last=True)
+DATALOADER_TRAINING = _Dataloader(batch_size=32, num_workers=0, shuffle=True, drop_last=True)
+DATALOADER_VALIDATION = _Dataloader(batch_size=32, num_workers=0, shuffle=True, drop_last=True)
 DATALOADER_TESTING = _Dataloader(batch_size=1, num_workers=0)
 #DATALOADER_TRAINING = _Dataloader(batch_size=32, num_workers=os.cpu_count() - 1, shuffle=True)
 #DATALOADER_VALIDATION = _Dataloader(batch_size=1, num_workers=os.cpu_count() - 1)
