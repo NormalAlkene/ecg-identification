@@ -6,6 +6,7 @@ from multiprocessing import Process, SimpleQueue
 
 import numpy as np
 from numpy import ndarray
+import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 import lightning as pl
@@ -14,6 +15,7 @@ class EcgIdDataset(Dataset):
     """ECG identification dataset
     """
     _device: str
+    _dtype: torch.dtype
     _sample_len: int
 
     _data_raw:  list[tuple[ndarray, str]]
@@ -25,9 +27,10 @@ class EcgIdDataset(Dataset):
     [(signal_idx, start_pos), ...]
     """
 
-    def __init__(self, path: str, sample_len: int, token_len: int, device: str = 'cpu'):
+    def __init__(self, path: str, sample_len: int, token_len: int, device: str = 'cpu', dtype: torch.dtype = torch.float32):
         super().__init__()
         self._device = device
+        self._dtype = dtype
         self._sample_len = sample_len
         self._token_len = token_len
         self._data_raw = []
@@ -47,8 +50,11 @@ class EcgIdDataset(Dataset):
             idx_second += 1
 
         cur_data = (self._get_sample(idx_first), self._get_sample(idx_second))
-        label = Tensor([cur_data[0][1] == cur_data[1][1], cur_data[0][2] == cur_data[1][2]],
-                       device = self._device)
+        label = torch.tensor(
+            [cur_data[0][1] == cur_data[1][1], cur_data[0][2] == cur_data[1][2]],
+            device = self._device,
+            dtype = self._dtype
+            )
         return cur_data[0][0], cur_data[1][0], label
 
     def _get_sample(self, idx: int) -> tuple[Tensor, str, int]:
@@ -65,7 +71,8 @@ class EcgIdDataset(Dataset):
         """
         signal_idx, start_pos = self._sample_list[idx]
         data, person_idx = self._data_raw[signal_idx]
-        data = Tensor(data[start_pos : start_pos + self._sample_len], device = self._device)
+        data = torch.tensor(data[start_pos : start_pos + self._sample_len],
+                            device = self._device, dtype = self._dtype)
         data = data.view(-1, self._token_len)
         return data, person_idx, signal_idx
 
@@ -79,18 +86,18 @@ class EcgIdDataset(Dataset):
             list[tuple[int, int]]: signal index, start position
         """
         ret: list[tuple[int, int]] = []
-        for signal, _ in self._data_raw:
-            sample_size = signal.size // self._sample_len
+        for idx, (signal, _) in enumerate(self._data_raw):
+            sample_num = signal.size // self._sample_len
             # total minimum space
             if signal.size % self._sample_len <= 0.5 * self._sample_len:
-                sample_size -= 1
+                sample_num -= 1
 
-            total_space = signal.size - self._sample_len * sample_size
+            total_space = signal.size - self._sample_len * sample_num
 
-            spaces = np.random.uniform(0, 1, size = sample_size + 1)
+            spaces = np.random.uniform(0, 1, size = sample_num + 1)
             spaces = np.round(spaces / spaces.sum() * total_space).astype(int)
-            start_poses = np.arange(sample_size) * self._sample_len + spaces.cumsum()[:-1]
-            ret.extend(zip([signal] * sample_size, start_poses.tolist()))
+            start_poses = np.arange(sample_num) * self._sample_len + spaces.cumsum()[:-1]
+            ret.extend(zip([idx] * sample_num, start_poses.tolist()))
 
         return ret
 
@@ -104,30 +111,30 @@ class EcgIdDataset(Dataset):
 class ResampleCallback(pl.Callback):
     """Resample callback
     """
-    __q_training: SimpleQueue
-    __q_validation: SimpleQueue
+    _q_training: SimpleQueue
+    _q_validation: SimpleQueue
 
     def __init__(self):
         super().__init__()
-        self.__q_training = SimpleQueue()
-        self.__q_validation = SimpleQueue()
+        self._q_training = SimpleQueue()
+        self._q_validation = SimpleQueue()
 
-    def __worker(self, dataset: EcgIdDataset, queue: SimpleQueue) -> None:
+    def _worker(self, dataset: EcgIdDataset, queue: SimpleQueue) -> None:
         queue.put(dataset.gen_resample_list())
 
     @override
     def on_train_epoch_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
         # TODO: check
         Process(
-            target = self.__worker,
-            args = (trainer.train_dataloader.dataset, self.__q_training)
+            target = self._worker,
+            args = (trainer.train_dataloader.dataset, self._q_training)
         ).start()
         Process(
-            target = self.__worker,
-            args = (pl_module.val_dataset, self.__q_validation)
+            target = self._worker,
+            args = (trainer.val_dataloaders.dataset, self._q_validation)
         )
 
     @override
     def on_train_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
-        pl_module.train_dataset.resample(self.__q_training.get())
-        pl_module.val_dataset.resample(self.__q_validation.get())
+        pl_module.train_dataset.resample(self._q_training.get())
+        pl_module.val_dataset.resample(self._q_validation.get())

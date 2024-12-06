@@ -4,6 +4,7 @@
 
 import os
 from dataclasses import asdict
+import multiprocessing
 
 from torch.utils.data import DataLoader
 import lightning as pl
@@ -16,6 +17,8 @@ from configs import *
 
 def main() -> None:
     """main"""
+    multiprocessing.set_start_method("forkserver")
+    torch.set_float32_matmul_precision("medium")
     model = TransformerEcgIdModel(**asdict(MODEL_TRANSFORMER))
     ds_training = EcgIdDataset(
         os.path.join(PATHS.path_ds_training, PATHS.name_ds_training),
@@ -25,8 +28,8 @@ def main() -> None:
         os.path.join(PATHS.path_ds_validation, PATHS.name_ds_validation),
         **asdict(DATASET)
     )
-    dl_training = DataLoader(ds_training, DATALOADER_TRAINING)
-    dl_validation = DataLoader(ds_validation, DATALOADER_VALIDATION)
+    dl_training = DataLoader(ds_training, **asdict(DATALOADER_TRAINING))
+    dl_validation = DataLoader(ds_validation, **asdict(DATALOADER_VALIDATION))
 
     logger = TensorBoardLogger(PATHS.path_model)
 
@@ -36,10 +39,10 @@ def main() -> None:
             ResampleCallback(),
             ModelCheckpoint(**asdict(CHECKPOINT)),
             EarlyStopping(**asdict(EARLY_STOPPING))
-        ]
+        ],
         **asdict(TRAINER)
     )
     trainer.fit(model, dl_training, dl_validation)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

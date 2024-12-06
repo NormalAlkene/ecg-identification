@@ -6,6 +6,8 @@ The config file of ECG identification
 from dataclasses import dataclass
 import os
 
+import torch
+
 DEVICE: str = 'cuda'
 
 @dataclass
@@ -43,9 +45,10 @@ class _TransformerModel:
     len_seq: int = 10
     dropout: float = 0.1
     activation: str = 'relu'
-    num_fc_layers: int = 4
+    num_fc_layers: int = 1
     lr: float = 1e-3
     device: str = 'cuda'
+    dtype: torch.dtype  = torch.float32
 
 MODEL_TRANSFORMER = _TransformerModel()
 
@@ -53,15 +56,15 @@ MODEL_TRANSFORMER = _TransformerModel()
 class _Trainer:
     max_epochs: int = 128
     accelerator: str = 'cuda'
-    gpus: int = 1
 
 TRAINER = _Trainer()
 
 @dataclass
 class _Dataset:
-    sample_len: int = MODEL_TRANSFORMER.len_seq
+    sample_len: int = MODEL_TRANSFORMER.len_seq * MODEL_TRANSFORMER.dim_input
     token_len: int = MODEL_TRANSFORMER.dim_input
     device: str = DEVICE
+    dtype: torch.dtype = MODEL_TRANSFORMER.dtype
 
 DATASET = _Dataset()
 
@@ -71,9 +74,9 @@ class _Dataloader:
     num_workers: int = 0
     shuffle: bool = False
 
-DATALOADER_TRAINING = _Dataloader(batch_size=32, num_workers=os.cpu_count(), shuffle=True)
-DATALOADER_VALIDATION = _Dataloader(batch_size=1, num_workers=os.cpu_count())
-DATALOADER_TESTING = _Dataloader(batch_size=1, num_workers=os.cpu_count())
+DATALOADER_TRAINING = _Dataloader(batch_size=32, num_workers=os.cpu_count() - 1, shuffle=True)
+DATALOADER_VALIDATION = _Dataloader(batch_size=1, num_workers=os.cpu_count() - 1)
+DATALOADER_TESTING = _Dataloader(batch_size=1, num_workers=os.cpu_count() - 1)
 
 @dataclass
 class _Checkpoint:
