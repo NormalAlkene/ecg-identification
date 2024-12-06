@@ -42,12 +42,12 @@ class _TransformerModel:
     dim_transformer_layer: int = 512
     num_heads: int = 8
     dim_input: int = 512
-    len_seq: int = 100
+    len_seq: int = 10
     dropout: float = 0.1
     activation: str = 'relu'
     num_fc_layers: int = 1
     lr: float = 1e-3
-    device: str = 'cuda'
+    device: str = DEVICE
     dtype: torch.dtype  = torch.float32
 
 MODEL_TRANSFORMER = _TransformerModel()
@@ -55,9 +55,8 @@ MODEL_TRANSFORMER = _TransformerModel()
 @dataclass
 class _Trainer:
     max_epochs: int = 128
-    accelerator: str = 'cuda'
+    accelerator: str = DEVICE
     log_every_n_steps: int = 10
-
 
 TRAINER = _Trainer()
 

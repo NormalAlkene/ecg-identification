@@ -141,7 +141,7 @@ class TransformerEcgIdModel(pl.LightningModule):
         outputs: Tensor = self(batch)
         loss: Tensor = self._criterion(outputs, batch[2])
 
-        self.log("train_loss", loss, prog_bar = True)
+        self.log("train_loss", loss.item(), prog_bar = True)
         return loss
 
     @override
