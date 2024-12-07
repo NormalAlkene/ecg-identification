@@ -172,6 +172,9 @@ class TransformerEcgIdModel(pl.LightningModule):
         """Configure optimizer
         """
         optimizer = optim.RAdam(self.parameters(), lr = self._lr)
-        scheduler = optim.lr_scheduler.ExponentialLR(optimizer, self._lr_gamma)
+        scheduler = {
+            "scheduler": optim.lr_scheduler.ExponentialLR(optimizer, self._lr_gamma),
+            "interval": "epoch"
+        }
         return [optimizer], [scheduler]
 

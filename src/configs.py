@@ -46,7 +46,7 @@ class _TransformerModel:
     dropout: float = 0.05
     activation: str = 'relu'
     num_fc_layers: int = 1
-    lr: float = 5e-4
+    lr: float = 1e-3
     lr_gamma: float = 0.9
     device: str = DEVICE
     dtype: torch.dtype  = torch.float32

@@ -8,7 +8,7 @@ import multiprocessing
 
 from torch.utils.data import DataLoader
 import lightning as pl
-from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping
+from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
 from lightning.pytorch.loggers import TensorBoardLogger
 
 from model import TransformerEcgIdModel
@@ -42,6 +42,7 @@ def main() -> None:
         callbacks = [
             ResampleCallback(),
             ModelCheckpoint(**asdict(CHECKPOINT)),
+            LearningRateMonitor(logging_interval = 'epoch'),
             EarlyStopping(**asdict(EARLY_STOPPING))
         ],
         **asdict(TRAINER)
