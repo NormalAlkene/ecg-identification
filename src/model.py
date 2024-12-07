@@ -35,6 +35,7 @@ class TransformerEcgIdModel(pl.LightningModule):
     """Transformer encoder model for ECG identification.
     """
     _lr: float
+    _lr_gamma: float
     _len_seq: int
 
     _embedding: nn.Module
@@ -73,6 +74,7 @@ class TransformerEcgIdModel(pl.LightningModule):
                  activation: str | Callable[[Tensor], Tensor] = "relu",
                  num_fc_layers: int = 4,
                  lr: float = 1e-3,
+                 lr_gamma: float = 0.95,
                  device: str = "cpu",
                  dtype: torch.dtype = torch.float32,
                  **kwargs
@@ -81,6 +83,7 @@ class TransformerEcgIdModel(pl.LightningModule):
 
         self._len_seq = len_seq
         self._lr = lr
+        self._lr_gamma = lr_gamma
 
         self._embedding = nn.Linear(dim_input, dim_transformer_layer, dtype = dtype)
         self._pe = PositionalEncoding(dim_transformer_layer, len_seq, device = device, dtype = dtype)
@@ -151,7 +154,7 @@ class TransformerEcgIdModel(pl.LightningModule):
         outputs: Tensor = self(batch)
         loss: Tensor = self._criterion(outputs, batch[2])
 
-        self.log("val_loss", loss, prog_bar = True)
+        self.log("val_loss", loss.item(), prog_bar = True)
         return loss
 
     @override
@@ -161,11 +164,14 @@ class TransformerEcgIdModel(pl.LightningModule):
         outputs: Tensor = self(batch)
         loss: Tensor = self._criterion(outputs, batch[2])
 
-        self.log("test_loss", loss, prog_bar = True)
+        self.log("test_loss", loss.item(), prog_bar = True)
         return loss
 
     @override
     def configure_optimizers(self) -> optim.Optimizer:
         """Configure optimizer
         """
-        return optim.Adam(self.parameters(), lr = self._lr)
+        optimizer = optim.RAdam(self.parameters(), lr = self._lr)
+        scheduler = optim.lr_scheduler.ExponentialLR(optimizer, self._lr_gamma)
+        return [optimizer], [scheduler]
+

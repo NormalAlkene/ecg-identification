@@ -17,10 +17,9 @@ from configs import *
 
 def main() -> None:
     """main"""
-    #multiprocessing.set_start_method("forkserver")
+    #multiprocessing.set_start_method("spawn")
     torch.set_float32_matmul_precision("medium")
-    model = TransformerEcgIdModel(**asdict(MODEL_TRANSFORMER))
-    #model = torch.compile(model, fullgraph = False) # will cause exceptions
+
     ds_training = EcgIdDataset(
         os.path.join(PATHS.path_ds_training, PATHS.name_ds_training),
         **asdict(DATASET)
@@ -33,6 +32,10 @@ def main() -> None:
     dl_validation = DataLoader(ds_validation, **asdict(DATALOADER_VALIDATION))
 
     logger = TensorBoardLogger(PATHS.path_model)
+
+    model = TransformerEcgIdModel(**asdict(MODEL_TRANSFORMER))
+    #model = torch.compile(model, fullgraph = False) # will cause exceptions
+    model.train()
 
     trainer = pl.Trainer(
         logger = logger,
