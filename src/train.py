@@ -22,11 +22,11 @@ def main() -> None:
 
     ds_training = EcgIdDataset(
         os.path.join(PATHS.path_ds_training, PATHS.name_ds_training),
-        **asdict(DATASET)
+        **asdict(DATASET_TRANSFORMER)
     )
     ds_validation = EcgIdDataset(
         os.path.join(PATHS.path_ds_validation, PATHS.name_ds_validation),
-        **asdict(DATASET)
+        **asdict(DATASET_TRANSFORMER)
     )
     dl_training = DataLoader(ds_training, **asdict(DATALOADER_TRAINING))
     dl_validation = DataLoader(ds_validation, **asdict(DATALOADER_VALIDATION))

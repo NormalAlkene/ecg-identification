@@ -63,12 +63,15 @@ TRAINER = _Trainer()
 
 @dataclass
 class _Dataset:
-    sample_len: int = MODEL_TRANSFORMER.len_seq * MODEL_TRANSFORMER.dim_input
-    token_len: int = MODEL_TRANSFORMER.dim_input
-    device: str = DEVICE
-    dtype: torch.dtype = MODEL_TRANSFORMER.dtype
+    sample_len: int = 0
+    token_len: int = 0
+    dtype: torch.dtype = 0
 
-DATASET = _Dataset()
+DATASET_TRANSFORMER = _Dataset(
+    sample_len = MODEL_TRANSFORMER.len_seq * MODEL_TRANSFORMER.dim_input,
+    token_len = MODEL_TRANSFORMER.dim_input,
+    dtype = MODEL_TRANSFORMER.dtype
+)
 
 @dataclass
 class _Dataloader:
@@ -77,12 +80,12 @@ class _Dataloader:
     shuffle: bool = False
     drop_last: bool = False
 
-DATALOADER_TRAINING = _Dataloader(batch_size=512, num_workers=0, shuffle=True, drop_last=False)
-DATALOADER_VALIDATION = _Dataloader(batch_size=512, num_workers=0, shuffle=True, drop_last=False)
-DATALOADER_TESTING = _Dataloader(batch_size=1, num_workers=0)
-#DATALOADER_TRAINING = _Dataloader(batch_size=512, num_workers=os.cpu_count() - 1, shuffle=True)
-#DATALOADER_VALIDATION = _Dataloader(batch_size=512, num_workers=os.cpu_count() - 1)
-#DATALOADER_TESTING = _Dataloader(batch_size=1, num_workers=os.cpu_count() - 1)
+#DATALOADER_TRAINING = _Dataloader(batch_size=512, num_workers=0, shuffle=True, drop_last=False)
+#DATALOADER_VALIDATION = _Dataloader(batch_size=512, num_workers=0, shuffle=True, drop_last=False)
+#DATALOADER_TESTING = _Dataloader(batch_size=1, num_workers=0)
+DATALOADER_TRAINING = _Dataloader(batch_size = 512, num_workers = os.cpu_count() - 1, shuffle = True, drop_last = True)
+DATALOADER_VALIDATION = _Dataloader(batch_size = 512, num_workers = os.cpu_count() - 1, drop_last = False)
+DATALOADER_TESTING = _Dataloader(batch_size = 1, num_workers = os.cpu_count() - 1)
 
 @dataclass
 class _Checkpoint:

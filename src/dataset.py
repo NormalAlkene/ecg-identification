@@ -13,7 +13,6 @@ import lightning as pl
 class EcgIdDataset(Dataset):
     """ECG identification dataset
     """
-    _device: str
     _dtype: torch.dtype
     _sample_len: int
 
@@ -26,15 +25,14 @@ class EcgIdDataset(Dataset):
     [(signal_idx, start_pos), ...]
     """
 
-    def __init__(self, path: str, sample_len: int, token_len: int, device: str = 'cpu', dtype: torch.dtype = torch.float32):
+    def __init__(self, path: str, sample_len: int, token_len: int, dtype: torch.dtype = torch.float32):
         super().__init__()
-        self._device = device
         self._dtype = dtype
         self._sample_len = sample_len
         self._token_len = token_len
         self._data_raw = []
         with np.load(path) as data:
-            self._data_raw = [ (torch.tensor(signal, device = device, dtype = dtype), k) for k, v in data.items() for signal in v ]
+            self._data_raw = [ (torch.tensor(signal, dtype = dtype), k) for k, v in data.items() for signal in v ]
 
         self.resample()
 
@@ -51,7 +49,6 @@ class EcgIdDataset(Dataset):
         cur_data = (self._get_sample(idx_first), self._get_sample(idx_second))
         label = torch.tensor(
             [cur_data[0][1] == cur_data[1][1], cur_data[0][2] == cur_data[1][2]],
-            device = self._device,
             dtype = self._dtype
             )
         return cur_data[0][0], cur_data[1][0], label
