@@ -38,11 +38,11 @@ PREPROCESSING = _Preprocessing()
 
 @dataclass
 class _TransformerModel:
-    num_transformer_layers: int = 4
-    dim_transformer_layer: int = 512
+    num_transformer_layers: int = 8
+    dim_transformer_layer: int = 8
     num_heads: int = 8
-    dim_input: int = 512
-    len_seq: int = 10
+    dim_input: int = 4
+    len_seq: int = 512
     dropout: float = 0.05
     activation: str = 'relu'
     num_fc_layers: int = 1
