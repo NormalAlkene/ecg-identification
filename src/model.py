@@ -7,6 +7,7 @@ import math
 
 import torch
 from torch import optim, nn, Tensor
+from torchmetrics.classification import BinaryAccuracy
 import lightning as pl
 
 class PositionalEncoding(nn.Module):
@@ -63,6 +64,7 @@ class TransformerEcgIdModel(pl.LightningModule):
     """
 
     _criterion: nn.Module
+    _metric: nn.Module
 
     def __init__(self,
                  num_transformer_layers: int = 4,
@@ -110,6 +112,7 @@ class TransformerEcgIdModel(pl.LightningModule):
         self._fc = nn.Sequential(*fc_list)
 
         self._criterion = nn.BCELoss()
+        self._metric = BinaryAccuracy(multidim_average = "samplewise")
 
     @override
     def forward(self, batch: list[Tensor]) -> Tensor:
@@ -153,8 +156,12 @@ class TransformerEcgIdModel(pl.LightningModule):
         """
         outputs: Tensor = self(batch)
         loss: Tensor = self._criterion(outputs, batch[2])
+        acc: Tensor = self._metric(outputs.transpose(0, 1), batch[2].transpose(0, 1))
 
         self.log("val_loss", loss.item(), prog_bar = True)
+        self.log("acc_0", acc[0].item(), prog_bar = True)
+        self.log("acc_1", acc[1].item(), prog_bar = True)
+
         return loss
 
     @override
