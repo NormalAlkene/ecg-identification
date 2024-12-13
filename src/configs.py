@@ -38,14 +38,14 @@ PREPROCESSING = _Preprocessing()
 
 @dataclass
 class _TransformerModel:
-    num_transformer_layers: int = 4
-    dim_transformer_layer: int = 16
+    num_transformer_layers: int = 6
+    dim_transformer_layer: int = 8
     num_heads: int = 4
     dim_input: int = 16
-    len_seq: int = 256
+    len_seq: int = 128
     dropout: float = 0.05
     activation: str = 'relu'
-    num_fc_layers: int = 0
+    num_fc_layers: int = 1
     lr: float = 1e-3
     lr_gamma: float = 0.9
     device: str = DEVICE
@@ -83,8 +83,8 @@ class _Dataloader:
 #DATALOADER_TRAINING = _Dataloader(batch_size=512, num_workers=0, shuffle=True, drop_last=False)
 #DATALOADER_VALIDATION = _Dataloader(batch_size=512, num_workers=0, shuffle=True, drop_last=False)
 #DATALOADER_TESTING = _Dataloader(batch_size=1, num_workers=0)
-DATALOADER_TRAINING = _Dataloader(batch_size = 128, num_workers = os.cpu_count() - 1, shuffle = True, drop_last = True)
-DATALOADER_VALIDATION = _Dataloader(batch_size = 128, num_workers = os.cpu_count() - 1, drop_last = False)
+DATALOADER_TRAINING = _Dataloader(batch_size = 150, num_workers = os.cpu_count() - 1, shuffle = True, drop_last = True)
+DATALOADER_VALIDATION = _Dataloader(batch_size = 150, num_workers = os.cpu_count() - 1, drop_last = False)
 DATALOADER_TESTING = _Dataloader(batch_size = 1, num_workers = os.cpu_count() - 1)
 
 @dataclass
