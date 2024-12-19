@@ -6,6 +6,7 @@ from itertools import product
 import random
 
 import numpy as np
+from numpy.lib.npyio import NpzFile
 import torch
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -16,6 +17,7 @@ class EcgIdDataset(Dataset):
     """
     _dtype: torch.dtype
     _sample_len: int
+    _force_balance: bool
 
     _data_raw:  list[tuple[Tensor, str]]
     """data
@@ -40,14 +42,20 @@ class EcgIdDataset(Dataset):
     [(samp_idx1, samp_idx2), ...]
     """
 
-    def __init__(self, path: str, sample_len: int, token_len: int, dtype: torch.dtype = torch.float32):
+    def __init__(self,
+                 data: str | tuple[str, str] | NpzFile | tuple[NpzFile, NpzFile],
+                 sample_len: int,
+                 token_len: int,
+                 dtype: torch.dtype = torch.float32,
+                 force_balance: bool = False):
         super().__init__()
         self._dtype = dtype
         self._sample_len = sample_len
         self._token_len = token_len
+        self._force_balance = force_balance
         self._data_raw = []
-        with np.load(path) as data:
-            self._data_raw = [ (torch.tensor(v, dtype = dtype), k) for k, v in data.items() ]
+        with np.load(data) as d:
+            self._data_raw = [ (torch.tensor(v, dtype = dtype), k) for k, v in d.items() ]
 
         self.resample()
         self.recombine()
@@ -57,14 +65,14 @@ class EcgIdDataset(Dataset):
 
     def __getitem__(self, idx: int) -> tuple[Tensor, Tensor, Tensor]:
         sample_idx = self._combination_list[idx]
-        cur_data = [self._get_sample(i) for i in sample_idx]
+        cur_data = [self.get_sample(i) for i in sample_idx]
         label = torch.tensor([
             cur_data[0][1] == cur_data[1][1], # person
             cur_data[0][1] == cur_data[1][1] and cur_data[0][2] == cur_data[1][2] # signal
         ], dtype = self._dtype)
         return cur_data[0][0], cur_data[1][0], label
 
-    def _get_sample(self, idx: int) -> tuple[Tensor, int, int]:
+    def get_sample(self, idx: int) -> tuple[Tensor, int, int]:
         """Get a sample of signal
 
         Args:
@@ -77,6 +85,29 @@ class EcgIdDataset(Dataset):
         data = self._data_raw[person_idx][0][signal_idx]
         data = data[start_pos : start_pos + self._sample_len].view(-1, self._token_len)
         return data, person_idx, signal_idx
+
+    def combination_to_idx(self, idx: int) -> tuple[int, int]:
+        """Convert combination index to sample index
+
+        Args:
+            idx (int): combination index
+
+        Returns:
+            tuple[int, int]: sample index pair
+        """
+        return self._combination_list[idx]
+
+    def idx_to_rawname(self, idx: int) -> tuple[str, int]:
+        """Get raw name by index
+
+        Args:
+            idx (int): sample index
+
+        Returns:
+            tuple[str, int]: person id, signal index
+        """
+        person_idx, signal_idx, _ = self._sample_list[idx]
+        return self._data_raw[person_idx][1], signal_idx
 
     def resample(self) -> None:
         """Generate resample list
@@ -117,18 +148,21 @@ class EcgIdDataset(Dataset):
 
         sample_set = set(range(len(self._sample_list)))
         comb_list: list[int] = []
-        idx_start = 0
-        for idx_end in self._sample_block_list:
-            # the same block
-            comb_list.extend(product(range(idx_start, idx_end), range(idx_start, idx_end)))
-            # different blocks
-            selected_samples = random.sample(
-                sorted(sample_set - set(range(idx_start, idx_end))),
-                idx_end - idx_start
-            )
-            comb_list.extend(product(range(idx_start, idx_end), selected_samples))
+        if self._force_balance:
+            idx_start = 0
+            for idx_end in self._sample_block_list:
+                # the same block
+                comb_list.extend(product(range(idx_start, idx_end), range(idx_start, idx_end)))
+                # different blocks
+                selected_samples = random.sample(
+                    sorted(sample_set - set(range(idx_start, idx_end))),
+                    idx_end - idx_start
+                )
+                comb_list.extend(product(range(idx_start, idx_end), selected_samples))
 
-            idx_start = idx_end
+                idx_start = idx_end
+        else:
+            comb_list = product(range(len(self._sample_list)), range(len(self._sample_list)))
 
         self._combination_list = comb_list
 

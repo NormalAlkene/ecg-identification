@@ -165,7 +165,7 @@ class TransformerEcgIdModel(pl.LightningModule):
         return loss
 
     @override
-    def testing_step(self, batch: list[Tensor], batch_idx: int) -> Tensor:
+    def test_step(self, batch: list[Tensor], batch_idx: int) -> Tensor:
         """Testing step
         """
         outputs: Tensor = self(batch)
